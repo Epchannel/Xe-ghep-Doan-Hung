@@ -1136,7 +1136,7 @@
                                                 <p role="status" aria-live="polite" aria-atomic="true"></p>
                                                 <ul></ul>
                                             </div>
-                                            <form action="https://script.google.com/macros/s/AKfycbxKoFW9bxdgkt-1jC_VMiP6jlq3CCYOVkqiM0fk-YsZCiqbCIExc440RzBeSYjrKsos/exec" method="POST" class="wpcf7-form init" aria-label="Form liên hệ" novalidate="novalidate" data-status="init">
+                                            <form id="dat-xe-form" action="https://script.google.com/macros/s/AKfycbxKoFW9bxdgkt-1jC_VMiP6jlq3CCYOVkqiM0fk-YsZCiqbCIExc440RzBeSYjrKsos/exec" method="POST" class="wpcf7-form init" aria-label="Form liên hệ" novalidate="novalidate" data-status="init">
                                                 <div class="formdatxe">
                                                     <div class="col large-12 col-padding">
                                                         <h4>ĐẶT XE NGAY TẠI ĐÂY
@@ -1693,7 +1693,7 @@
                                                 <p role="status" aria-live="polite" aria-atomic="true"></p>
                                                 <ul></ul>
                                             </div>
-                                            <form action="https://script.google.com/macros/s/AKfycbxKoFW9bxdgkt-1jC_VMiP6jlq3CCYOVkqiM0fk-YsZCiqbCIExc440RzBeSYjrKsos/exec" method="POST" class="wpcf7-form init" aria-label="Form liên hệ" novalidate="novalidate" data-status="init">
+                                            <form id="dat-xe-form" action="https://script.google.com/macros/s/AKfycbxKoFW9bxdgkt-1jC_VMiP6jlq3CCYOVkqiM0fk-YsZCiqbCIExc440RzBeSYjrKsos/exec" method="POST" class="wpcf7-form init" aria-label="Form liên hệ" novalidate="novalidate" data-status="init">
                                                 <div class="formdatxe">
                                                     <div class="col large-12 col-padding">
                                                         <h4>ĐẶT XE NGAY TẠI ĐÂY
@@ -2266,7 +2266,7 @@
                             <p role="status" aria-live="polite" aria-atomic="true"></p>
                             <ul></ul>
                         </div>
-                        <form action="https://script.google.com/macros/s/AKfycbxKoFW9bxdgkt-1jC_VMiP6jlq3CCYOVkqiM0fk-YsZCiqbCIExc440RzBeSYjrKsos/exec" method="POST" class="wpcf7-form init" aria-label="Form liên hệ" novalidate="novalidate" data-status="init">
+                        <form id="dat-xe-form" action="https://script.google.com/macros/s/AKfycbxKoFW9bxdgkt-1jC_VMiP6jlq3CCYOVkqiM0fk-YsZCiqbCIExc440RzBeSYjrKsos/exec" method="POST" class="wpcf7-form init" aria-label="Form liên hệ" novalidate="novalidate" data-status="init">
                             <div class="formdatxe">
                                 <div class="col large-12 col-padding">
                                     <h4>ĐẶT XE NGAY TẠI ĐÂY
@@ -3025,7 +3025,61 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <![endif]-->
     <script type="text/javascript" src="https://xeghepuytin.com/wp-content/themes/flatsome/assets/libs/packery.pkgd.min.js?ver=3.15.4" id="flatsome-masonry-js-js"></script>
     <script src="http://127.0.0.1:5500/script.js" type="text/javascript"></script>
-
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#dat-xe-form').on('submit', function (e) {
+                e.preventDefault(); // Ngăn chặn việc form tự động submit
+    
+                // Lấy dữ liệu từ form
+                var formData = $(this).serialize();
+    
+                // Hiển thị biểu tượng quay tròn cho nút submit
+                var $submitButton = $(this).find('input[type="submit"]');
+                $submitButton.attr('disabled', true); // Vô hiệu hóa nút submit để tránh việc bấm nhiều lần
+                $('.btn-datxe').addClass('processing'); // Thêm class 'processing' vào .btn-datxe để hiển thị hiệu ứng quay tròn nếu có
+    
+                // Gửi dữ liệu bằng Ajax
+                $.ajax({
+                    url: $(this).attr('action'),
+                    type: 'POST',
+                    data: formData,
+                    beforeSend: function () {
+                        // Trước khi gửi, ẩn thông báo cũ và hiển thị thông báo đang gửi
+                        $('.wpcf7-response-output').removeClass('wpcf7-validation-errors wpcf7-mail-sent-ok wpcf7-mail-sent-ng').text('Đang xử lý...').show();
+                    },
+                    success: function (response) {
+                        // Hiển thị phản hồi thành công vào class wpcf7-response-output
+                        $('.wpcf7-response-output')
+                            .removeClass('wpcf7-validation-errors wpcf7-mail-sent-ng')
+                            .addClass('wpcf7-mail-sent-ok')
+                            .text('Chúng tôi đã nhận được thông tin bạn gửi. Xin vui lòng chờ trong ít phút để nhận liên hệ!')
+                            .show();
+    
+                        // Reset lại form sau khi gửi thành công
+                        $('#dat-xe-form')[0].reset();
+    
+                        // Xóa bỏ hiệu ứng quay tròn của nút submit
+                        $submitButton.attr('disabled', false); // Kích hoạt lại nút submit
+                        $('.btn-datxe').removeClass('processing'); // Xóa class 'processing' khỏi .btn-datxe
+                    },
+                    error: function (response) {
+                        // Hiển thị phản hồi lỗi vào class wpcf7-response-output
+                        $('.wpcf7-response-output')
+                            .removeClass('wpcf7-mail-sent-ok')
+                            .addClass('wpcf7-mail-sent-ng')
+                            .text('Có lỗi xảy ra khi gửi thông tin. Vui lòng thử lại sau.')
+                            .show();
+    
+                        // Xóa bỏ hiệu ứng quay tròn của nút submit
+                        $submitButton.attr('disabled', false); // Kích hoạt lại nút submit
+                        $('.btn-datxe').removeClass('processing'); // Xóa class 'processing' khỏi .btn-datxe
+                    }
+                });
+            });
+        });
+    </script>
+    
 </body>
 
 </html>
