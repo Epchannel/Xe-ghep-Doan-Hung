@@ -1,0 +1,63 @@
+const DATA_ENTRY_SHEET_NAME = "Sheet1";  // Tên Sheet của bạn (ví dụ: Sheet1)
+const TIME_STAMP_COLUMN_NAME = "Timestamp"; // Tên cột để lưu thời gian gửi form
+
+// Lấy đối tượng Sheet theo tên đã định nghĩa
+var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(DATA_ENTRY_SHEET_NAME);
+
+// Hàm xử lý khi có request POST
+const doPost = (request = {}) => {
+  const { postData: { contents, type } = {} } = request;
+  
+  // Gọi hàm phân tích và lưu dữ liệu vào Google Sheets
+  var data = parseFormData(contents);
+  appendToGoogleSheet(data);
+
+  // Trả về kết quả JSON để hiển thị trạng thái xử lý
+  return ContentService.createTextOutput(JSON.stringify({ status: 'Success', data })).setMimeType(ContentService.MimeType.JSON);
+};
+
+// Hàm phân tích dữ liệu gửi đến từ form
+function parseFormData(postData) {
+  var data = {};
+  var parameters = postData.split('&');
+  
+  for (var i = 0; i < parameters.length; i++) {
+    var keyValue = parameters[i].split('=');
+    // Decode key và value để loại bỏ các ký tự mã hóa đặc biệt như %5B, %5D
+    var key = decodeURIComponent(keyValue[0]).replace(/\+/g, ' '); // Xử lý tên trường
+    var value = decodeURIComponent(keyValue[1] || '').replace(/\+/g, ' '); // Xử lý giá trị
+
+    // Loại bỏ các ký tự [] khỏi tên trường nếu có
+    key = key.replace(/\[\]/g, "");
+
+    // Gán giá trị vào đối tượng data
+    data[key] = value;
+  }
+  return data;
+}
+
+
+// Hàm lưu dữ liệu vào Google Sheets
+function appendToGoogleSheet(data) {
+  if (!sheet) {
+    throw new Error("Sheet không tồn tại. Vui lòng kiểm tra lại tên sheet.");
+  }
+
+  // Kiểm tra và thêm thời gian nếu có trường Timestamp
+  if (TIME_STAMP_COLUMN_NAME !== "") {
+    data[TIME_STAMP_COLUMN_NAME] = new Date().toLocaleString(); // Lưu thời gian với định dạng dễ đọc hơn
+  }
+
+  // Lấy tiêu đề của các cột trong Google Sheets
+  var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+
+  // Tạo mảng dữ liệu theo thứ tự tiêu đề của các cột
+  var rowData = headers.map(headerFld => {
+    // Trường hợp tên cột có chứa khoảng trắng hoặc ký tự đặc biệt, loại bỏ khoảng trắng và chữ hoa
+    var cleanHeaderFld = headerFld.trim();
+    return data[cleanHeaderFld] || ""; // Nếu không có giá trị thì để trống
+  });
+
+  // Thêm dòng dữ liệu mới vào Google Sheets
+  sheet.appendRow(rowData);
+}
